@@ -1,0 +1,47 @@
+  // Monaco Editor Decorations for Comments
+  useEffect(() => {
+    if (!editorRef.current || comments.length === 0) return;
+
+    const editor = editorRef.current;
+    const decorations = [];
+
+    comments.forEach(thread => {
+      const isResolved = thread.status === 'RESOLVED';
+      const lineNumber = thread.startLine;
+
+      // Glyph margin decoration (comment icon)
+      decorations.push({
+        range: new window.monaco.Range(lineNumber, 1, lineNumber, 1),
+        options: {
+          isWholeLine: false,
+          glyphMarginClassName: isResolved ? 'comment-glyph-resolved' : 'comment-glyph-open',
+          glyphMarginHoverMessage: { 
+            value: `💬 ${thread.comments.length} comment(s) - Click to view` 
+          }
+        }
+      });
+
+      // Line highlight decoration
+      decorations.push({
+        range: new window.monaco.Range(lineNumber, 1, lineNumber, 1),
+        options: {
+          isWholeLine: true,
+          className: isResolved ? 'comment-line-resolved' : 'comment-line-open',
+          hoverMessage: {
+            value: `**${thread.createdBy.name}**: ${thread.comments[0].text}`
+          }
+        }
+      });
+    });
+
+    // Apply decorations
+    const decorationIds = editor.deltaDecorations([], decorations);
+
+    // Cleanup
+    return () => {
+      if (editor && decorationIds) {
+        editor.deltaDecorations(decorationIds, []);
+      }
+    };
+  }, [comments]);
+

@@ -1,0 +1,29 @@
+/* Workspace Content - Sidebar + Main Panel Layout */
+.workspace-content {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 0;
+    min-height: calc(100vh - 250px);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: linear-gradient(135deg,
+            hsla(240, 20%, 15%, 0.7) 0%,
+            hsla(240, 20%, 12%, 0.5) 100%);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+}
+
+/* Members Panel - Sidebar */
+.members-panel {
+    padding: var(--spacing-lg);
+    border-right: 1px solid var(--border-color);
+    background: hsla(240, 20%, 10%, 0.3);
+    overflow-y: auto;
+}
+
+/* Sessions Panel - Main Content */
+.sessions-panel {
+    padding: var(--spacing-xl);
+    background: transparent;
+}
