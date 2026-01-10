@@ -23,6 +23,15 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Debugging logs for Railway deployment
+console.log('--- Deployment Debug Info ---');
+console.log(`PORT: ${PORT}`);
+console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+console.log(`DB_HOST defined: ${!!process.env.DB_HOST || !!process.env.MYSQLHOST}`);
+console.log(`MONGODB_URI defined: ${!!process.env.MONGODB_URI}`);
+console.log(`FRONTEND_URL: ${process.env.FRONTEND_URL}`);
+console.log('----------------------------');
+
 // Create HTTP server
 const httpServer = createServer(app);
 
@@ -268,19 +277,12 @@ const startServer = async () => {
         });
 
         // Start listening
-        httpServer.listen(PORT, () => {
+        httpServer.listen(PORT, '0.0.0.0', () => {
             console.log('\n🚀 CollabCode Backend Server Started');
-            console.log(`📡 Server running on http://localhost:${PORT}`);
+            console.log(`📡 Server running on port ${PORT} (bound to 0.0.0.0)`);
             console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
             console.log(`⚡ Socket.IO enabled for real-time collaboration`);
-            console.log(`\n📋 Available endpoints:`);
-            console.log(`   POST http://localhost:${PORT}/api/auth/register`);
-            console.log(`   POST http://localhost:${PORT}/api/auth/login`);
-            console.log(`   POST http://localhost:${PORT}/api/auth/google`);
-            console.log(`   GET  http://localhost:${PORT}/api/workspaces (requires JWT)`);
-            console.log(`   POST http://localhost:${PORT}/api/workspaces (requires JWT)`);
-            console.log(`   GET  http://localhost:${PORT}/api/health`);
-            console.log(`   GET  http://localhost:${PORT}/api/protected (requires JWT)\n`);
+            console.log(`\n📋 Status: Online and ready for connections\n`);
         });
     } catch (error) {
         console.error('❌ Failed to start server:', error.message);
