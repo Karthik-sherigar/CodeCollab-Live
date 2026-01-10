@@ -28,6 +28,7 @@ export const initializeDatabase = async () => {
         email VARCHAR(255) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NULL,
         google_id VARCHAR(255) NULL,
+        github_id VARCHAR(255) NULL,
         auth_provider ENUM('LOCAL', 'GOOGLE') NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         INDEX idx_email (email),
