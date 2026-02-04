@@ -656,7 +656,7 @@ const SessionPage = () => {
         onRunCode={handleRunCode}
       />
 
-      <div className="session-content-with-comments">
+      <div className={`session-content-with-comments ${showComments ? 'show-comments' : ''}`}>
         {showComments && (
           <CommentPanel
             comments={comments}
