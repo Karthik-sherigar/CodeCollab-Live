@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { BASE_URL } from '../services/api';
 
 const GitHubExportModal = ({ isOpen, onClose, onExport, currentContent, sessionTitle }) => {
     const [repos, setRepos] = useState([]);
@@ -19,7 +19,7 @@ const GitHubExportModal = ({ isOpen, onClose, onExport, currentContent, sessionT
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:5000/api/github/repos', {
+            const response = await fetch(`${BASE_URL}/api/github/repos`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await response.json();
@@ -41,7 +41,7 @@ const GitHubExportModal = ({ isOpen, onClose, onExport, currentContent, sessionT
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:5000/api/github/export', {
+            const response = await fetch(`${BASE_URL}/api/github/export`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

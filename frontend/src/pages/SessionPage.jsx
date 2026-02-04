@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { authAPI } from '../services/api';
+import { authAPI, BASE_URL } from '../services/api';
 import SessionHeader from '../components/SessionHeader';
 import CodeEditor from '../components/CodeEditor';
 import CommentModal from '../components/CommentModal';
 import CommentPanel from '../components/CommentPanel';
 import CommentSidebar from '../components/CommentSidebar';
 import ConfirmModal from '../components/ConfirmModal';
+import OutputPanel from '../components/OutputPanel';
 import { socket } from '../socket';
 import { generateUserColor, injectCursorStyles, removeCursorStyles } from '../utils/colorGenerator';
 import GitHubImportModal from '../components/GitHubImportModal';
@@ -35,6 +36,10 @@ const SessionPage = () => {
   const [showExportModal, setShowExportModal] = useState(false);
   const [githubConnected, setGithubConnected] = useState(false);
   const [githubStatus, setGithubStatus] = useState(null);
+  const [showOutput, setShowOutput] = useState(false);
+  const [output, setOutput] = useState('');
+  const [isRunning, setIsRunning] = useState(false);
+  const [outputHeight, setOutputHeight] = useState(250);
 
   const saveTimeoutRef = useRef(null);
   const isRemoteChange = useRef(false);
@@ -58,7 +63,7 @@ const SessionPage = () => {
     const fetchSession = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:5000/api/sessions/${id}`, {
+        const response = await fetch(`${BASE_URL}/api/sessions/${id}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
@@ -92,7 +97,7 @@ const SessionPage = () => {
     const fetchComments = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/sessions/${id}/comments`, {
+        const response = await fetch(`${BASE_URL}/api/sessions/${id}/comments`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -109,7 +114,7 @@ const SessionPage = () => {
     const fetchGithubStatus = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/github/status', {
+        const response = await fetch(`${BASE_URL}/api/github/status`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
@@ -315,7 +320,7 @@ const SessionPage = () => {
     saveTimeoutRef.current = setTimeout(async () => {
       try {
         setSaving(true);
-        const response = await fetch(`http://localhost:5000/api/sessions/${id}/code`, {
+        const response = await fetch(`${BASE_URL}/api/sessions/${id}/code`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -394,7 +399,7 @@ const SessionPage = () => {
   const handleAddComment = async ({ lineNumber, text }) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/sessions/${id}/comments`, {
+      const response = await fetch(`${BASE_URL}/api/sessions/${id}/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -419,7 +424,7 @@ const SessionPage = () => {
   const handleReply = async (threadId, text) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/sessions/${id}/comments/${threadId}`, {
+      const response = await fetch(`${BASE_URL}/api/sessions/${id}/comments/${threadId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -440,7 +445,7 @@ const SessionPage = () => {
   const handleResolve = async (threadId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/sessions/${id}/comments/${threadId}/resolve`, {
+      const response = await fetch(`${BASE_URL}/api/sessions/${id}/comments/${threadId}/resolve`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -459,7 +464,7 @@ const SessionPage = () => {
   const handleReopen = async (threadId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/sessions/${id}/comments/${threadId}/reopen`, {
+      const response = await fetch(`${BASE_URL}/api/sessions/${id}/comments/${threadId}/reopen`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -511,7 +516,7 @@ const SessionPage = () => {
     try {
       setShowConfirmEnd(false); // Close modal
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/sessions/${id}/end`, {
+      const response = await fetch(`${BASE_URL}/api/sessions/${id}/end`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -555,7 +560,7 @@ const SessionPage = () => {
   const handleConfirmDelete = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/sessions/${id}/comments/${deleteThreadId}`, {
+      const response = await fetch(`${BASE_URL}/api/sessions/${id}/comments/${deleteThreadId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -570,6 +575,41 @@ const SessionPage = () => {
       }
     } catch (err) {
       console.error('Error deleting comment:', err);
+    }
+  };
+
+  // Handle code execution
+  const handleRunCode = async () => {
+    setShowOutput(true);
+    setIsRunning(true);
+    setOutput('Running code...\n');
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${BASE_URL}/api/execute`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          code,
+          language: session.language,
+          filename: session.filename
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setOutput(data.output || 'Code executed successfully (no output)');
+      } else {
+        setOutput(`Error: ${data.message}\n${data.error || ''}`);
+      }
+    } catch (error) {
+      setOutput(`Execution error: ${error.message}`);
+    } finally {
+      setIsRunning(false);
     }
   };
 
@@ -613,6 +653,7 @@ const SessionPage = () => {
         githubConnected={githubConnected}
         onImportGitHub={() => setShowImportModal(true)}
         onExportGitHub={() => setShowExportModal(true)}
+        onRunCode={handleRunCode}
       />
 
       <div className="session-content-with-comments">
@@ -690,6 +731,39 @@ const SessionPage = () => {
         currentContent={code}
         sessionTitle={session.title}
       />
+
+      {showOutput && (
+        <OutputPanel
+          output={output}
+          isRunning={isRunning}
+          onClear={() => setOutput('')}
+          onClose={() => setShowOutput(false)}
+          height={outputHeight}
+          onResize={setOutputHeight}
+        />
+      )}
+
+      {/* Mobile Floating Action Buttons */}
+      <div className="mobile-fab-stack">
+        {session.status === 'ACTIVE' && (
+          <button
+            onClick={handleRunCode}
+            className="mobile-fab mobile-fab-run"
+            title="Run code"
+          >
+            ▶
+          </button>
+        )}
+        {session.status === 'ACTIVE' && session.creator_id === user?.id && (
+          <button
+            onClick={() => setShowConfirmEnd(true)}
+            className="mobile-fab mobile-fab-end"
+            title="End session"
+          >
+            ⏹
+          </button>
+        )}
+      </div>
     </div>
   );
 };

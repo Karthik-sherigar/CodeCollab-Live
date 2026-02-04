@@ -10,7 +10,8 @@ const SessionHeader = ({
     currentUserId,
     githubConnected,
     onImportGitHub,
-    onExportGitHub
+    onExportGitHub,
+    onRunCode
 }) => {
     const [showMenu, setShowMenu] = useState(false);
     const menuRef = useRef(null);
@@ -124,6 +125,21 @@ const SessionHeader = ({
             <span className={getStatusClass(session.status)}>
                 {session.status}
             </span>
+
+            {/* Run button - visible when session is ACTIVE */}
+            {session.status === 'ACTIVE' && onRunCode && (
+                <button
+                    onClick={onRunCode}
+                    className="btn btn-success btn-sm"
+                    style={{ marginLeft: '10px' }}
+                    title="Run code"
+                >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ marginRight: '4px' }}>
+                        <path d="M5 3l14 9-14 9V3z" fill="currentColor" />
+                    </svg>
+                    Run
+                </button>
+            )}
 
             {saving && (
                 <div className="saving-indicator">

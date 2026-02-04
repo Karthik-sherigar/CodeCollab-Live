@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authAPI, workspaceAPI } from '../services/api';
+import { authAPI, workspaceAPI, BASE_URL } from '../services/api';
 import WelcomeHeader from '../components/WelcomeHeader';
 import WorkspaceGrid from '../components/WorkspaceGrid';
 import EmptyState from '../components/EmptyState';
 import CreateWorkspaceModal from '../components/CreateWorkspaceModal';
 
-const Dashboard = () => {
+const Dashboard = ({ showCreateModal, setShowCreateModal }) => {
     const navigate = useNavigate();
     const user = authAPI.getCurrentUser();
 
@@ -40,6 +40,14 @@ const Dashboard = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // Only run once on mount
 
+    // Sync external showCreateModal with internal isModalOpen
+    useEffect(() => {
+        if (showCreateModal) {
+            setIsModalOpen(true);
+            setShowCreateModal(false); // Reset the prop
+        }
+    }, [showCreateModal, setShowCreateModal]);
+
     const handleCreateWorkspace = async (name) => {
         const response = await workspaceAPI.create(name);
         if (response.success) {
@@ -55,7 +63,7 @@ const Dashboard = () => {
     const fetchGithubStatus = useCallback(async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:5000/api/github/status', {
+            const response = await fetch(`${BASE_URL}/api/github/status`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await response.json();
@@ -83,7 +91,7 @@ const Dashboard = () => {
         const token = localStorage.getItem('token');
         // We pass the JWT token in the URL for the callback to identify the user
         // A better way would be a short-lived state/nonce, but this is simpler for now
-        window.location.href = `http://localhost:5000/api/github/auth?token=${token}`;
+        window.location.href = `${BASE_URL}/api/github/auth?token=${token}`;
     };
 
 
@@ -96,6 +104,16 @@ const Dashboard = () => {
                 <div className="dashboard-main">
                     <div className="section-header">
                         <h2 className="section-title">Your Workspaces</h2>
+                        {/* Mobile-only create button */}
+                        <button
+                            className="mobile-create-workspace-btn"
+                            onClick={() => setIsModalOpen(true)}
+                            title="Create Workspace"
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                        </button>
                     </div>
 
                     {loading ? (

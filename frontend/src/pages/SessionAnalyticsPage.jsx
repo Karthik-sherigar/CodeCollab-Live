@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { authAPI } from '../services/api';
+import { authAPI, BASE_URL } from '../services/api';
 import MetricCard from '../components/MetricCard';
 import ContributionChart from '../components/ContributionChart';
 
@@ -15,7 +15,7 @@ const SessionAnalyticsPage = () => {
         const fetchAnalytics = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const response = await fetch(`http://localhost:5000/api/sessions/${id}/analytics`, {
+                const response = await fetch(`${BASE_URL}/api/sessions/${id}/analytics`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 

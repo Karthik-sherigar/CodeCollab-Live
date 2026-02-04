@@ -3,6 +3,7 @@ import { useState } from 'react';
 const CreateSessionModal = ({ isOpen, onClose, onCreateSession }) => {
     const [title, setTitle] = useState('');
     const [language, setLanguage] = useState('javascript');
+    const [filename, setFilename] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -16,6 +17,19 @@ const CreateSessionModal = ({ isOpen, onClose, onCreateSession }) => {
         { value: 'typescript', label: 'TypeScript' }
     ];
 
+    const getFileExtension = (lang) => {
+        const extensions = {
+            javascript: '.js',
+            python: '.py',
+            java: '.java',
+            cpp: '.cpp',
+            go: '.go',
+            rust: '.rs',
+            typescript: '.ts'
+        };
+        return extensions[lang] || '.txt';
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
@@ -25,11 +39,24 @@ const CreateSessionModal = ({ isOpen, onClose, onCreateSession }) => {
             return;
         }
 
+        if (!filename.trim()) {
+            setError('Filename is required');
+            return;
+        }
+
+        // Auto-add extension if not present
+        const extension = getFileExtension(language);
+        let finalFilename = filename.trim();
+        if (!finalFilename.endsWith(extension)) {
+            finalFilename += extension;
+        }
+
         setLoading(true);
         try {
-            await onCreateSession(title.trim(), language);
+            await onCreateSession(title.trim(), language, finalFilename);
             setTitle('');
             setLanguage('javascript');
+            setFilename('');
             onClose();
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to create session');
@@ -42,6 +69,7 @@ const CreateSessionModal = ({ isOpen, onClose, onCreateSession }) => {
         if (!loading) {
             setTitle('');
             setLanguage('javascript');
+            setFilename('');
             setError('');
             onClose();
         }
@@ -106,6 +134,38 @@ const CreateSessionModal = ({ isOpen, onClose, onCreateSession }) => {
                         </select>
                     </div>
 
+                    <div className="form-group">
+                        <label htmlFor="filename" className="form-label">
+                            Filename *
+                        </label>
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type="text"
+                                id="filename"
+                                className="form-input"
+                                placeholder={`e.g., main, solution, index`}
+                                value={filename}
+                                onChange={(e) => setFilename(e.target.value)}
+                                disabled={loading}
+                                required
+                            />
+                            <span style={{
+                                position: 'absolute',
+                                right: '12px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                color: '#888',
+                                fontSize: '14px',
+                                pointerEvents: 'none'
+                            }}>
+                                {getFileExtension(language)}
+                            </span>
+                        </div>
+                        <small style={{ color: '#888', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                            Extension will be added automatically
+                        </small>
+                    </div>
+
                     <div className="modal-actions">
                         <button
                             type="button"
@@ -118,7 +178,7 @@ const CreateSessionModal = ({ isOpen, onClose, onCreateSession }) => {
                         <button
                             type="submit"
                             className="btn btn-primary"
-                            disabled={loading || !title.trim()}
+                            disabled={loading || !title.trim() || !filename.trim()}
                         >
                             {loading ? (
                                 <>

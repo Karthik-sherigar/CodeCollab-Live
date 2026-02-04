@@ -8,6 +8,8 @@ import WorkspacePage from './pages/WorkspacePage';
 import SessionPage from './pages/SessionPage';
 import PlaybackPage from './pages/PlaybackPage';
 import SessionAnalyticsPage from './pages/SessionAnalyticsPage';
+import SessionsPage from './pages/SessionsPage';
+import ProfilePage from './pages/ProfilePage';
 import ProtectedRoute from './components/ProtectedRoute';
 import FloatingDock from './components/FloatingDock';
 import { authAPI } from './services/api';
@@ -31,7 +33,10 @@ function AppContent() {
                     path="/dashboard"
                     element={
                         <ProtectedRoute>
-                            <Dashboard />
+                            <Dashboard
+                                showCreateModal={showCreateModal}
+                                setShowCreateModal={setShowCreateModal}
+                            />
                         </ProtectedRoute>
                     }
                 />
@@ -67,8 +72,22 @@ function AppContent() {
                         </ProtectedRoute>
                     }
                 />
-                <Route path="/sessions" element={<ProtectedRoute><div className="placeholder-page"><h1>Sessions</h1><p>Coming in Step 3</p></div></ProtectedRoute>} />
-                <Route path="/profile" element={<ProtectedRoute><div className="placeholder-page"><h1>Profile</h1><p>Coming soon</p></div></ProtectedRoute>} />
+                <Route
+                    path="/sessions"
+                    element={
+                        <ProtectedRoute>
+                            <SessionsPage />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/profile"
+                    element={
+                        <ProtectedRoute>
+                            <ProfilePage />
+                        </ProtectedRoute>
+                    }
+                />
                 <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
 

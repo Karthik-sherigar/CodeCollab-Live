@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { BASE_URL } from '../services/api';
 
 
 const GitHubImportModal = ({ isOpen, onClose, onImport }) => {
@@ -19,7 +20,7 @@ const GitHubImportModal = ({ isOpen, onClose, onImport }) => {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:5000/api/github/repos', {
+            const response = await fetch(`${BASE_URL}/api/github/repos`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await response.json();
@@ -41,7 +42,7 @@ const GitHubImportModal = ({ isOpen, onClose, onImport }) => {
         try {
             setLoading(true);
             const token = localStorage.getItem('token');
-            const response = await fetch('http://localhost:5000/api/github/import', {
+            const response = await fetch(`${BASE_URL}/api/github/import`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

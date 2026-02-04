@@ -347,7 +347,7 @@ router.post('/:id/sessions', async (req, res) => {
     try {
         const workspaceId = req.params.id;
         const userId = req.user.id;
-        const { title, language } = req.body;
+        const { title, language, filename } = req.body;
 
         // Validate input
         if (!title || !title.trim()) {
@@ -387,11 +387,11 @@ router.post('/:id/sessions', async (req, res) => {
             });
         }
 
-        // Create session
+        // Insert session
         const [result] = await pool.query(
-            `INSERT INTO sessions (workspace_id, title, language, status, created_by) 
-             VALUES (?, ?, ?, 'ACTIVE', ?)`,
-            [workspaceId, title.trim(), language.toLowerCase(), userId]
+            `INSERT INTO sessions (workspace_id, title, language, filename, status, created_by) 
+             VALUES (?, ?, ?, ?, 'ACTIVE', ?)`,
+            [workspaceId, title, language, filename || null, userId]
         );
 
         const sessionId = result.insertId;

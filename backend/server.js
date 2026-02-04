@@ -13,6 +13,7 @@ import authRoutes from './routes/auth.js';
 import workspaceRoutes from './routes/workspace.js';
 import sessionRoutes from './routes/session.js';
 import githubRoutes from './routes/github.js';
+import executeRoutes from './routes/execute.js';
 import { verifyToken } from './middleware/auth.js';
 import { apiLimiter, authLimiter, githubLimiter } from './middleware/security.js';
 import { errorHandler, notFound } from './middleware/errorMiddleware.js';
@@ -63,6 +64,7 @@ app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/workspaces', verifyToken, workspaceRoutes);
 app.use('/api/sessions', verifyToken, sessionRoutes);
 app.use('/api/github', githubLimiter, githubRoutes);
+app.use('/api/execute', verifyToken, executeRoutes);
 
 // Protected route example
 app.get('/api/protected', verifyToken, (req, res) => {

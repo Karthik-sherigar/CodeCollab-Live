@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { authAPI } from '../services/api';
+import { authAPI, BASE_URL } from '../services/api';
 import CodeEditor from '../components/CodeEditor';
 
 const PlaybackPage = () => {
@@ -26,7 +26,7 @@ const PlaybackPage = () => {
                 const token = localStorage.getItem('token');
 
                 // Fetch session
-                const sessionRes = await fetch(`http://localhost:5000/api/sessions/${id}`, {
+                const sessionRes = await fetch(`${BASE_URL}/api/sessions/${id}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const sessionData = await sessionRes.json();
@@ -41,7 +41,7 @@ const PlaybackPage = () => {
                 setCode(sessionData.code || '');
 
                 // Fetch events
-                const eventsRes = await fetch(`http://localhost:5000/api/sessions/${id}/events`, {
+                const eventsRes = await fetch(`${BASE_URL}/api/sessions/${id}/events`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const eventsData = await eventsRes.json();

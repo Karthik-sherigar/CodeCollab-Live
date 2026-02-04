@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { authAPI, workspaceAPI } from '../services/api';
 import MembersPanel from '../components/MembersPanel';
@@ -16,6 +16,26 @@ const WorkspacePage = () => {
     const [error, setError] = useState('');
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [isCreateSessionModalOpen, setIsCreateSessionModalOpen] = useState(false);
+    const [showMembersPanel, setShowMembersPanel] = useState(false);
+    const [showMenu, setShowMenu] = useState(false);
+    const menuRef = useRef(null);
+
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setShowMenu(false);
+            }
+        };
+
+        if (showMenu) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showMenu]);
 
     const fetchWorkspace = useCallback(async () => {
         try {
@@ -95,12 +115,52 @@ const WorkspacePage = () => {
 
     return (
         <div className="workspace-page">
+            {/* Mobile Hamburger Menu */}
+            <div className="workspace-mobile-header">
+                <div className="hamburger-menu" ref={menuRef}>
+                    <button
+                        className="hamburger-btn"
+                        onClick={() => setShowMenu(!showMenu)}
+                        title="Menu"
+                    >
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+
+                    {showMenu && (
+                        <div className="hamburger-dropdown">
+                            <button
+                                className="dropdown-item"
+                                onClick={() => {
+                                    setShowMembersPanel(true);
+                                    setShowMenu(false);
+                                }}
+                            >
+                                <span className="dropdown-icon">👥</span>
+                                <span>Members</span>
+                            </button>
+                            <button
+                                className="dropdown-item"
+                                onClick={() => navigate('/dashboard')}
+                            >
+                                <span className="dropdown-icon">🏠</span>
+                                <span>Dashboard</span>
+                            </button>
+                        </div>
+                    )}
+                </div>
+                <h2 className="workspace-mobile-title">{workspace.name}</h2>
+            </div>
+
             <div className="workspace-content">
                 <MembersPanel
                     workspace={workspace}
                     members={workspace.members}
                     userRole={workspace.userRole}
                     onInvite={() => setIsInviteModalOpen(true)}
+                    className={showMembersPanel ? 'show' : ''}
+                    onClose={() => setShowMembersPanel(false)}
                 />
 
                 <SessionsPanel

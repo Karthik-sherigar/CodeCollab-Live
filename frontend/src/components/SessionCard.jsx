@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { authAPI } from '../services/api';
+import { useState } from 'react';
+import { authAPI, BASE_URL } from '../services/api';
 
 const SessionCard = ({ session, onDelete }) => {
     const navigate = useNavigate();
@@ -39,7 +40,7 @@ const SessionCard = ({ session, onDelete }) => {
 
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch(`http://localhost:5000/api/sessions/${session.id}`, {
+            const response = await fetch(`${BASE_URL}/api/sessions/${session.id}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
