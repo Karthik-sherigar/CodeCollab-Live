@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { BASE_URL } from '../services/api';
 
 const GitHubExportModal = ({ isOpen, onClose, onExport, currentContent, sessionTitle }) => {
