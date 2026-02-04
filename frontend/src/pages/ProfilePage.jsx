@@ -97,78 +97,35 @@ const ProfilePage = () => {
                             Account Information
                         </h3>
 
-                        {isEditing ? (
-                            <div>
-                                <div className="form-group">
-                                    <label className="form-label">Name</label>
-                                    <input
-                                        type="text"
-                                        className="form-input"
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Email</label>
-                                    <input
-                                        type="email"
-                                        className="form-input"
-                                        value={formData.email}
-                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    />
-                                </div>
-                                <div style={{ display: 'flex', gap: 'var(--spacing-sm)', marginTop: 'var(--spacing-md)' }}>
-                                    <button className="btn btn-primary" onClick={handleSave}>
-                                        Save Changes
-                                    </button>
-                                    <button
-                                        className="btn btn-secondary"
-                                        onClick={() => {
-                                            setIsEditing(false);
-                                            setFormData({
-                                                name: profile.name || '',
-                                                email: profile.email || ''
-                                            });
-                                        }}
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
+                        <div>
+                            <div style={{ marginBottom: 'var(--spacing-md)' }}>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '0.25rem' }}>
+                                    Name
+                                </p>
+                                <p style={{ color: 'var(--text-primary)' }}>{profile?.name}</p>
                             </div>
-                        ) : (
-                            <div>
-                                <div style={{ marginBottom: 'var(--spacing-md)' }}>
-                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '0.25rem' }}>
-                                        Name
-                                    </p>
-                                    <p style={{ color: 'var(--text-primary)' }}>{profile?.name}</p>
-                                </div>
-                                <div style={{ marginBottom: 'var(--spacing-md)' }}>
-                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '0.25rem' }}>
-                                        Email
-                                    </p>
-                                    <p style={{ color: 'var(--text-primary)' }}>{profile?.email}</p>
-                                </div>
-                                <div style={{ marginBottom: 'var(--spacing-md)' }}>
-                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '0.25rem' }}>
-                                        Member Since
-                                    </p>
-                                    <p style={{ color: 'var(--text-primary)' }}>
-                                        {profile?.created_at
-                                            ? new Date(profile.created_at).toLocaleDateString('en-US', {
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric'
-                                            })
-                                            : 'Not available'
-                                        }
-                                    </p>
-                                </div>
-                                <button className="btn btn-primary" onClick={() => setIsEditing(true)}>
-                                    Edit Profile
-                                </button>
+                            <div style={{ marginBottom: 'var(--spacing-md)' }}>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '0.25rem' }}>
+                                    Email
+                                </p>
+                                <p style={{ color: 'var(--text-primary)' }}>{profile?.email}</p>
                             </div>
-                        )}
+                            <div style={{ marginBottom: 'var(--spacing-md)' }}>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '0.25rem' }}>
+                                    Member Since
+                                </p>
+                                <p style={{ color: 'var(--text-primary)' }}>
+                                    {profile?.created_at
+                                        ? new Date(profile.created_at).toLocaleDateString('en-US', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric'
+                                        })
+                                        : 'Not available'
+                                    }
+                                </p>
+                            </div>
+                        </div>
                     </div>
 
                     {/* GitHub Connection Status */}
