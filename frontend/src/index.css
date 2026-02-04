@@ -2384,14 +2384,20 @@ body::before {
   color: white;
 }
 
-/* Updated Comment Panel Layout - Left Side */
 .session-content-with-comments {
-  display: grid;
-  grid-template-columns: 1fr 400px;
+  display: flex;
   gap: 0;
   flex: 1;
   overflow: hidden;
-  height: 100%;
+  height: calc(100vh - 64px);
+  /* Subtract header height */
+  width: 100%;
+}
+
+.session-content-with-comments .editor-section {
+  flex: 1;
+  min-width: 0;
+  /* Important for flex child with overflow */
 }
 
 /* Mobile: Stack editor and comments */
