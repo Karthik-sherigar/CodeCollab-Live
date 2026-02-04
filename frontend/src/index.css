@@ -2733,12 +2733,11 @@ body::before {
   flex-shrink: 0;
 }
 
-/* Fix Body Overflow - No Scrollbar */
+/* Fix Body Overflow - Allow scrolling on non-app pages */
 html,
 body,
 #root {
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
   margin: 0;
   padding: 0;
 }
