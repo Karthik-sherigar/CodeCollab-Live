@@ -420,7 +420,11 @@ router.post('/:id/sessions', async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Create session error:', error);
+        console.error('--- Create Session Error ---');
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        console.error('SQL details (if any):', error.sql || 'N/A');
+        console.error('Stack trace:', error.stack);
         res.status(500).json({
             success: false,
             message: 'Server error'

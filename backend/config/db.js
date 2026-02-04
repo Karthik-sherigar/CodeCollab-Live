@@ -36,20 +36,24 @@ export const initializeDatabase = async () => {
     `);
 
     // Ensure GitHub columns exist (for existing tables)
-    const [columns] = await connection.query('SHOW COLUMNS FROM users');
-    const columnNames = columns.map(c => c.Field);
+    const [userColumns] = await connection.query('SHOW COLUMNS FROM users');
+    const userColumnNames = userColumns.map(c => c.Field);
 
-    if (!columnNames.includes('github_id')) {
+    if (!userColumnNames.includes('github_id')) {
+      console.log('📦 Adding github_id column to users table...');
       await connection.query('ALTER TABLE users ADD COLUMN github_id VARCHAR(255) NULL AFTER google_id');
       await connection.query('CREATE INDEX idx_github_id ON users(github_id)');
     }
-    if (!columnNames.includes('github_username')) {
+    if (!userColumnNames.includes('github_username')) {
+      console.log('📦 Adding github_username column to users table...');
       await connection.query('ALTER TABLE users ADD COLUMN github_username VARCHAR(255) NULL AFTER github_id');
     }
-    if (!columnNames.includes('github_access_token')) {
+    if (!userColumnNames.includes('github_access_token')) {
+      console.log('📦 Adding github_access_token column to users table...');
       await connection.query('ALTER TABLE users ADD COLUMN github_access_token TEXT NULL AFTER github_username');
     }
-    if (!columnNames.includes('github_connected_at')) {
+    if (!userColumnNames.includes('github_connected_at')) {
+      console.log('📦 Adding github_connected_at column to users table...');
       await connection.query('ALTER TABLE users ADD COLUMN github_connected_at TIMESTAMP NULL AFTER github_access_token');
     }
 
@@ -102,6 +106,23 @@ export const initializeDatabase = async () => {
         INDEX idx_status (status)
       )
     `);
+
+    // Ensure session columns exist (especially filename)
+    const [sessColumns] = await connection.query('SHOW COLUMNS FROM sessions');
+    const sessColumnNames = sessColumns.map(c => c.Field);
+
+    if (!sessColumnNames.includes('filename')) {
+      console.log('📦 Adding filename column to sessions table...');
+      await connection.query('ALTER TABLE sessions ADD COLUMN filename VARCHAR(255) NULL AFTER language');
+    }
+    if (!sessColumnNames.includes('started_at')) {
+      console.log('📦 Adding started_at column to sessions table...');
+      await connection.query('ALTER TABLE sessions ADD COLUMN started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP AFTER created_at');
+    }
+    if (!sessColumnNames.includes('ended_at')) {
+      console.log('📦 Adding ended_at column to sessions table...');
+      await connection.query('ALTER TABLE sessions ADD COLUMN ended_at TIMESTAMP NULL AFTER started_at');
+    }
 
     connection.release();
     console.log('✅ Database initialized successfully');
