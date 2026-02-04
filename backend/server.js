@@ -24,6 +24,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust proxy for Railway/Vercel (needed for express-rate-limit)
+app.set('trust proxy', 1);
+
 // Debugging logs for Railway deployment
 console.log('--- Deployment Debug Info ---');
 console.log(`PORT: ${PORT}`);

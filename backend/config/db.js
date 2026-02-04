@@ -20,7 +20,7 @@ export const initializeDatabase = async () => {
   try {
     const connection = await pool.getConnection();
 
-    // Create users table with proper schema
+    // Create users table if not exists with proper schema
     await connection.query(`
       CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -28,17 +28,30 @@ export const initializeDatabase = async () => {
         email VARCHAR(255) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NULL,
         google_id VARCHAR(255) NULL,
-        github_id VARCHAR(255) NULL,
-        github_username VARCHAR(255) NULL,
-        github_access_token TEXT NULL,
-        github_connected_at TIMESTAMP NULL,
         auth_provider ENUM('LOCAL', 'GOOGLE') NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         INDEX idx_email (email),
-        INDEX idx_google_id (google_id),
-        INDEX idx_github_id (github_id)
+        INDEX idx_google_id (google_id)
       )
     `);
+
+    // Ensure GitHub columns exist (for existing tables)
+    const [columns] = await connection.query('SHOW COLUMNS FROM users');
+    const columnNames = columns.map(c => c.Field);
+
+    if (!columnNames.includes('github_id')) {
+      await connection.query('ALTER TABLE users ADD COLUMN github_id VARCHAR(255) NULL AFTER google_id');
+      await connection.query('CREATE INDEX idx_github_id ON users(github_id)');
+    }
+    if (!columnNames.includes('github_username')) {
+      await connection.query('ALTER TABLE users ADD COLUMN github_username VARCHAR(255) NULL AFTER github_id');
+    }
+    if (!columnNames.includes('github_access_token')) {
+      await connection.query('ALTER TABLE users ADD COLUMN github_access_token TEXT NULL AFTER github_username');
+    }
+    if (!columnNames.includes('github_connected_at')) {
+      await connection.query('ALTER TABLE users ADD COLUMN github_connected_at TIMESTAMP NULL AFTER github_access_token');
+    }
 
     // Create workspaces table
     await connection.query(`

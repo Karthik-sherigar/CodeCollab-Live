@@ -10,19 +10,32 @@ const router = express.Router();
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'your-32-character-secret-key!!';
 const ALGORITHM = 'aes-256-cbc';
 
+function getEncryptionKey() {
+    // Ensure key is exactly 32 bytes for aes-256-cbc
+    const key = Buffer.alloc(32);
+    const secret = Buffer.from(ENCRYPTION_KEY);
+    secret.copy(key);
+    return key;
+}
+
 function encrypt(text) {
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv(ALGORITHM, Buffer.from(ENCRYPTION_KEY.slice(0, 32)), iv);
-    let encrypted = cipher.update(text, 'utf8', 'hex');
-    encrypted += cipher.final('hex');
-    return iv.toString('hex') + ':' + encrypted;
+    try {
+        const iv = crypto.randomBytes(16);
+        const cipher = crypto.createCipheriv(ALGORITHM, getEncryptionKey(), iv);
+        let encrypted = cipher.update(text, 'utf8', 'hex');
+        encrypted += cipher.final('hex');
+        return iv.toString('hex') + ':' + encrypted;
+    } catch (err) {
+        console.error('Encryption error:', err);
+        throw err;
+    }
 }
 
 function decrypt(text) {
     const parts = text.split(':');
     const iv = Buffer.from(parts.shift(), 'hex');
     const encryptedText = parts.join(':');
-    const decipher = crypto.createDecipheriv(ALGORITHM, Buffer.from(ENCRYPTION_KEY.slice(0, 32)), iv);
+    const decipher = crypto.createDecipheriv(ALGORITHM, getEncryptionKey(), iv);
     let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
     return decrypted;
@@ -35,6 +48,10 @@ router.get('/auth', verifyToken, (req, res) => {
     const scope = 'repo read:user';
     const state = req.user.id; // Pass user ID as state
 
+    console.log('--- GitHub Auth Start ---');
+    console.log(`State (UserID): ${state}`);
+    console.log(`Redirect URI: ${redirectUri}`);
+
     const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&state=${state}`;
 
     res.redirect(githubAuthUrl);
@@ -44,16 +61,23 @@ router.get('/auth', verifyToken, (req, res) => {
 router.get('/callback', async (req, res) => {
     const { code, state } = req.query;
 
+    console.log('--- GitHub Callback Received ---');
+    console.log(`Code present: ${!!code}`);
+    console.log(`State (UserID): ${state}`);
+
     if (!code) {
+        console.error('GitHub error: No code returned');
         return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard?github_error=no_code`);
     }
 
     if (!state) {
+        console.error('GitHub error: No state (userID) returned');
         return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard?github_error=no_state`);
     }
 
     try {
         // Exchange code for access token
+        console.log('Exchanging code for token...');
         const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
             method: 'POST',
             headers: {
@@ -70,32 +94,43 @@ router.get('/callback', async (req, res) => {
         const tokenData = await tokenResponse.json();
 
         if (tokenData.error) {
+            console.error('GitHub token exchange error:', tokenData.error);
             return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard?github_error=${tokenData.error}`);
         }
 
         const accessToken = tokenData.access_token;
+        console.log('Token received successfully.');
 
         // Get GitHub user info
         const octokit = new Octokit({ auth: accessToken });
         const { data: githubUser } = await octokit.users.getAuthenticated();
+        console.log(`GitHub User authenticated: ${githubUser.login}`);
 
         // Store in database (encrypt token)
+        console.log('Encrypting token...');
         const encryptedToken = encrypt(accessToken);
 
-        // Update user record (assuming user is logged in via session/cookie)
-        // For now, we'll store in a temporary way - you should link this to logged-in user
-        // This is a simplified version - in production, you'd use the JWT user ID
-
-        await pool.query(
+        // Update user record
+        console.log(`Updating database for user ID: ${state}`);
+        const [result] = await pool.query(
             `UPDATE users 
        SET github_id = ?, github_username = ?, github_access_token = ?, github_connected_at = NOW()
        WHERE id = ?`,
             [githubUser.id.toString(), githubUser.login, encryptedToken, state]
         );
 
+        console.log(`Database update result: ${result.affectedRows} row(s) updated`);
+
+        if (result.affectedRows === 0) {
+            console.warn(`Warning: No user found with ID ${state}. GitHub connection not saved.`);
+        }
+
         res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard?github_connected=true`);
     } catch (error) {
-        console.error('GitHub OAuth error:', error);
+        console.error('--- GitHub OAuth Critical Error ---');
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        console.error('Stack trace:', error.stack);
         res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/dashboard?github_error=auth_failed`);
     }
 });
