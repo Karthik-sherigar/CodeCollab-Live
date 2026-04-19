@@ -16,26 +16,7 @@ const WorkspacePage = () => {
     const [error, setError] = useState('');
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [isCreateSessionModalOpen, setIsCreateSessionModalOpen] = useState(false);
-    const [showMembersPanel, setShowMembersPanel] = useState(false);
-    const [showMenu, setShowMenu] = useState(false);
-    const menuRef = useRef(null);
-
-    // Close menu when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (menuRef.current && !menuRef.current.contains(event.target)) {
-                setShowMenu(false);
-            }
-        };
-
-        if (showMenu) {
-            document.addEventListener('mousedown', handleClickOutside);
-        }
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [showMenu]);
+    const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
     const fetchWorkspace = useCallback(async () => {
         try {
@@ -59,28 +40,20 @@ const WorkspacePage = () => {
     }, [id, navigate]);
 
     useEffect(() => {
-        if (!user) {
-            navigate('/login');
-            return;
-        }
+        if (!user) { navigate('/login'); return; }
         fetchWorkspace();
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    }, []); // eslint-disable-line
 
     const handleInviteMember = async (email, role) => {
         const response = await workspaceAPI.inviteMember(id, email, role);
         if (response.success) {
-            // Update members list
-            setWorkspace(prev => ({
-                ...prev,
-                members: response.members
-            }));
+            setWorkspace(prev => ({ ...prev, members: response.members }));
         }
     };
 
     const handleCreateSession = async (title, language) => {
         const response = await workspaceAPI.createSession(id, title, language);
         if (response.success) {
-            // Navigate to the new session
             navigate(`/session/${response.sessionId}`);
         }
     };
@@ -89,22 +62,21 @@ const WorkspacePage = () => {
 
     if (loading) {
         return (
-            <div className="workspace-page">
-                <div className="loading-container">
-                    <div className="spinner-large"></div>
-                    <p>Loading workspace...</p>
-                </div>
+            <div className="wp-loading-screen">
+                <div className="wp-spinner"></div>
+                <p className="wp-loading-text">Loading workspace…</p>
             </div>
         );
     }
 
     if (error) {
         return (
-            <div className="workspace-page">
-                <div className="error-container">
-                    <div className="message message-error">{error}</div>
-                    <button onClick={() => navigate('/dashboard')} className="btn btn-secondary">
-                        Back to Dashboard
+            <div className="wp-loading-screen">
+                <div className="wp-error-box">
+                    <span className="wp-error-icon">⚠️</span>
+                    <p>{error}</p>
+                    <button className="wp-back-btn" onClick={() => navigate('/dashboard')}>
+                        ← Back to Dashboard
                     </button>
                 </div>
             </div>
@@ -114,72 +86,111 @@ const WorkspacePage = () => {
     if (!workspace) return null;
 
     return (
-        <div className="workspace-page">
-            {/* Mobile Hamburger Menu */}
-            <div className="workspace-mobile-header">
-                <div className="hamburger-menu" ref={menuRef}>
+        <div className="wp-root">
+
+            {/* ── Top Navigation Bar ── */}
+            <header className="wp-topbar">
+                <div className="wp-topbar-left">
                     <button
-                        className="hamburger-btn"
-                        onClick={() => setShowMenu(!showMenu)}
-                        title="Menu"
+                        className="wp-nav-btn"
+                        onClick={() => navigate('/dashboard')}
+                        aria-label="Back to dashboard"
                     >
-                        <span></span>
-                        <span></span>
-                        <span></span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="15 18 9 12 15 6" />
+                        </svg>
+                        <span className="wp-nav-label">Dashboard</span>
                     </button>
 
-                    {showMenu && (
-                        <div className="hamburger-dropdown">
-                            <button
-                                className="dropdown-item"
-                                onClick={() => {
-                                    setShowMembersPanel(true);
-                                    setShowMenu(false);
-                                }}
-                            >
-                                <span className="dropdown-icon">👥</span>
-                                <span>Members</span>
-                            </button>
-                            <button
-                                className="dropdown-item"
-                                onClick={() => navigate('/dashboard')}
-                            >
-                                <span className="dropdown-icon">🏠</span>
-                                <span>Dashboard</span>
-                            </button>
+                    <div className="wp-breadcrumb-divider" aria-hidden="true">/</div>
+
+                    <div className="wp-workspace-identity">
+                        <div className="wp-workspace-avatar">
+                            {workspace.name.charAt(0).toUpperCase()}
                         </div>
+                        <div>
+                            <h1 className="wp-workspace-name">{workspace.name}</h1>
+                            <p className="wp-workspace-meta">
+                                <span className={`wp-role-chip wp-role-${workspace.userRole?.toLowerCase()}`}>
+                                    {workspace.userRole}
+                                </span>
+                                <span className="wp-meta-sep">·</span>
+                                {workspace.members?.length} member{workspace.members?.length !== 1 ? 's' : ''}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="wp-topbar-right">
+                    {/* Mobile: toggle sidebar */}
+                    <button
+                        className="wp-mobile-sidebar-toggle"
+                        onClick={() => setIsMobileSidebarOpen(v => !v)}
+                        aria-label="Toggle members"
+                    >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                    </button>
+
+                    {(workspace.userRole === 'OWNER' || workspace.userRole === 'COLLABORATOR') && (
+                        <button
+                            className="wp-create-session-btn"
+                            onClick={() => setIsCreateSessionModalOpen(true)}
+                        >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                                <path d="M12 5v14M5 12h14"/>
+                            </svg>
+                            <span>New Session</span>
+                        </button>
                     )}
                 </div>
-                <h2 className="workspace-mobile-title">{workspace.name}</h2>
+            </header>
+
+            {/* ── Main Layout ── */}
+            <div className="wp-layout">
+
+                {/* ── Mobile Backdrop (OUTSIDE sidebar so it covers full page) ── */}
+                {isMobileSidebarOpen && (
+                    <div
+                        className="wp-sidebar-backdrop"
+                        onClick={() => setIsMobileSidebarOpen(false)}
+                    />
+                )}
+
+                {/* ── Sidebar: Members ── */}
+                <aside className={`wp-sidebar ${isMobileSidebarOpen ? 'wp-sidebar--open' : ''}`}>
+                    <div className="wp-sidebar-inner">
+                        <MembersPanel
+                            workspace={workspace}
+                            members={workspace.members}
+                            userRole={workspace.userRole}
+                            onInvite={() => { setIsInviteModalOpen(true); setIsMobileSidebarOpen(false); }}
+                            onClose={() => setIsMobileSidebarOpen(false)}
+                        />
+                    </div>
+                </aside>
+
+                {/* ── Main: Sessions ── */}
+                <main className="wp-main">
+                    <SessionsPanel
+                        sessions={workspace.sessions}
+                        userRole={workspace.userRole}
+                        onCreateSession={() => setIsCreateSessionModalOpen(true)}
+                        onSessionDeleted={() => window.location.reload()}
+                    />
+                </main>
             </div>
 
-            <div className="workspace-content">
-                <MembersPanel
-                    workspace={workspace}
-                    members={workspace.members}
-                    userRole={workspace.userRole}
-                    onInvite={() => setIsInviteModalOpen(true)}
-                    className={showMembersPanel ? 'show' : ''}
-                    onClose={() => setShowMembersPanel(false)}
-                />
-
-                <SessionsPanel
-                    sessions={workspace.sessions}
-                    userRole={workspace.userRole}
-                    onCreateSession={() => setIsCreateSessionModalOpen(true)}
-                    onSessionDeleted={() => {
-                        // Refresh workspace data after session deletion
-                        window.location.reload();
-                    }}
-                />
-            </div>
-
+            {/* ── Modals ── */}
             <InviteMemberModal
                 isOpen={isInviteModalOpen}
                 onClose={() => setIsInviteModalOpen(false)}
                 onInvite={handleInviteMember}
             />
-
             <CreateSessionModal
                 isOpen={isCreateSessionModalOpen}
                 onClose={() => setIsCreateSessionModalOpen(false)}

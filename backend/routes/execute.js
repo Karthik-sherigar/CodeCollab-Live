@@ -9,11 +9,19 @@ const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Helper function to check if a command exists
+// Helper function to check if a command exists (cross-platform: Windows + Unix)
 const commandExists = (command) => {
     return new Promise((resolve) => {
-        exec(`which ${command}`, (error) => {
-            resolve(!error);
+        // 'where' works on Windows, 'which' works on Linux/macOS
+        const checkCmd = process.platform === 'win32'
+            ? `where ${command}`
+            : `which ${command}`;
+        exec(checkCmd, (error) => {
+            if (!error) return resolve(true);
+            // Fallback: try running the command with --version
+            exec(`${command} --version`, (err2) => {
+                resolve(!err2);
+            });
         });
     });
 };

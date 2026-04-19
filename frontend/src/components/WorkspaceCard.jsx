@@ -4,20 +4,20 @@ const WorkspaceCard = ({ workspace }) => {
     const navigate = useNavigate();
 
     const handleOpen = () => {
-        console.log('Opening workspace:', workspace.id);
         navigate(`/workspace/${workspace.id}`);
     };
 
     const getRoleBadgeClass = (role) => {
+        const baseClass = 'role-badge';
         switch (role) {
             case 'OWNER':
-                return 'role-badge role-owner';
+                return `${baseClass} role-owner`;
             case 'COLLABORATOR':
-                return 'role-badge role-collaborator';
+                return `${baseClass} role-collaborator`;
             case 'REVIEWER':
-                return 'role-badge role-reviewer';
+                return `${baseClass} role-reviewer`;
             default:
-                return 'role-badge';
+                return baseClass;
         }
     };
 
@@ -47,12 +47,23 @@ const WorkspaceCard = ({ workspace }) => {
 
             <div className="workspace-stats">
                 <div className="stat-item">
-                    <span className="stat-icon">💻</span>
+                    <span className="stat-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" />
+                            <path d="M8 21h8M12 17v4" />
+                        </svg>
+                    </span>
                     <span className="stat-value">{workspace.sessionCount || 0}</span>
                     <span className="stat-label">Sessions</span>
                 </div>
                 <div className="stat-item">
-                    <span className="stat-icon">👥</span>
+                    <span className="stat-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                    </span>
                     <span className="stat-value">{workspace.member_count || 1}</span>
                     <span className="stat-label">Members</span>
                 </div>
@@ -60,10 +71,13 @@ const WorkspaceCard = ({ workspace }) => {
 
             <div className="workspace-footer">
                 <span className="last-active">
-                    Last active: {formatDate(workspace.updated_at || workspace.created_at)}
+                    {formatDate(workspace.updated_at || workspace.created_at)}
                 </span>
                 <button onClick={handleOpen} className="btn btn-primary btn-sm">
                     Open
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '6px' }}>
+                        <path d="M9 18l6-6-6-6" />
+                    </svg>
                 </button>
             </div>
         </div>
