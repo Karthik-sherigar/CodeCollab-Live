@@ -21,7 +21,7 @@ function AppContent() {
     const location = useLocation();
     const [showCreateModal, setShowCreateModal] = useState(false);
     const isAuthenticated = authAPI.isAuthenticated();
-    const hideDock = ['/login', '/register'].includes(location.pathname);
+    const showDock = isAuthenticated && location.pathname === '/dashboard';
 
     return (
         <>
@@ -91,7 +91,7 @@ function AppContent() {
                 <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
 
-            {isAuthenticated && !hideDock && (
+            {showDock && (
                 <FloatingDock onCreateWorkspace={() => setShowCreateModal(true)} />
             )}
         </>
